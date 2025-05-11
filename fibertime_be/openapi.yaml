@@ -1,0 +1,198 @@
+openapi: 3.0.0
+info:
+  title: Fibertime API
+  version: 1.0.0
+  description: API for managing user authentication, device pairing, and connections.
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+paths:
+  /auth/request-otp:
+    post:
+      summary: Request an OTP for user authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cell_number:
+                  type: string
+                  example: "+1234567890"
+      responses:
+        200:
+          description: OTP generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  otp:
+                    type: string
+                    example: "123456"
+        400:
+          description: Bad request
+  /auth/login:
+    post:
+      summary: Login using cell number and OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cell_number:
+                  type: string
+                  example: "+1234567890"
+                otp:
+                  type: string
+                  example: "123456"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  accessToken:
+                    type: string
+                  deviceCode:
+                    type: string
+                    nullable: true
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      cell_number:
+                        type: string
+        401:
+          description: Unauthorized
+  /device/create-device-code:
+    post:
+      summary: Generate a pairing code for a device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mac_address:
+                  type: string
+                  example: "00:1A:2B:3C:4D:5E"
+      responses:
+        200:
+          description: Pairing code generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: string
+                  pairingCode:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  status:
+                    type: string
+        400:
+          description: Bad request
+  /device/device:
+    get:
+      summary: Get device by pairing code
+      parameters:
+        - name: device-code
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "ABCD"
+      responses:
+        200:
+          description: Device retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: string
+                  macAddress:
+                    type: string
+                  status:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  code:
+                    type: string
+        404:
+          description: Device not found
+  /device/connect-device:
+    post:
+      summary: Connect a device to a bundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceCode:
+                  type: string
+                  example: "ABCD"
+                bundleId:
+                  type: string
+                  example: "63f1e8b2c9d1a2b3c4d5e6f7"
+      responses:
+        200:
+          description: Device connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: string
+                  status:
+                    type: string
+                  bundle:
+                    type: string
+        404:
+          description: Device not found
+  /device/connection-status:
+    get:
+      summary: Check the connection status of a device
+      parameters:
+        - name: device-id
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "63f1e8b2c9d1a2b3c4d5e6f7"
+      responses:
+        200:
+          description: Connection status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: string
+                  status:
+                    type: string
+                  connected:
+                    type: boolean
+        404:
+          description: Device not found

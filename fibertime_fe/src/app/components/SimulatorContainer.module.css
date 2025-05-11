@@ -1,0 +1,70 @@
+.sim-container {
+    position: fixed;
+    height: 600px;
+    z-index: 100;
+}
+
+.simulator-header {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 1px;
+    cursor: move;
+    padding: 0.3rem 0.5rem;
+    box-sizing: border-box;
+}
+
+.simulator-header-cellphone {
+    background: #eaeaea;
+    border-bottom: 1px solid #c3c3c3;
+    border-top-left-radius: 27px;
+    border-top-right-radius: 27px;
+    color: #222;
+    width: 166px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0.3rem 0.5rem;
+}
+
+.simulator-header-tv {
+    background: linear-gradient(90deg, #111, #333);
+    border-bottom: 2px solid #888;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    color: #fff;
+}
+
+.device-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.device-cellphone {
+    width: 166px;
+    height: 353px;
+    min-height: 0;
+    border-radius: 27px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    background: transparent;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.device-tv {
+    width: 400px;
+    min-height: 260px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.20);
+    background: #111;
+    border: 3px solid #444;
+}

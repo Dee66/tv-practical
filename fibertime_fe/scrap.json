@@ -1,0 +1,45 @@
+[
+  {
+    _id: ObjectId('6814af23465011f1cd9268f7'),
+    cell_number: '+27 22 222 2222',
+    devices: [],
+    bundles: [],
+    createdAt: ISODate('2025-05-02T11:40:19.607Z'),
+    updatedAt: ISODate('2025-05-02T11:40:19.607Z'),
+    __v: 0
+  },
+  {
+    _id: ObjectId('6815c72ecb0d52f835a3cd01'),
+    cell_number: '+15555555555',
+    devices: [],
+    bundles: [],
+    createdAt: ISODate('2025-05-03T07:35:10.924Z'),
+    updatedAt: ISODate('2025-05-03T07:35:10.924Z'),
+    __v: 0
+  },
+  {
+    _id: ObjectId('6815c9da11aad79fb635fa8e'),
+    cell_number: '+12345678901',
+    email: 'alice@example.com',
+    role: 'admin',
+    username: 'alice'
+  },
+  {
+    _id: ObjectId('6815c9da11aad79fb635fa94'),
+    cell_number: '+12345678902',
+    email: 'bob@example.com',
+    role: 'user',
+    username: 'bob'
+  },
+  {
+    _id: ObjectId('6815c9da11aad79fb635fa99'),
+    cell_number: '+12345678903',
+    email: 'carol@example.com',
+    role: 'user',
+    username: 'carol'
+  }
+]
+
+
+
+db.users.find({_id: ObjectId('6814af23465011f1cd9268f7')})

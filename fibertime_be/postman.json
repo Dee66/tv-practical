@@ -1,0 +1,652 @@
+{
+  "info": {
+    "name": "Fibertime API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Bundles",
+      "item": [
+        {
+          "name": "Get All Bundles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost/api/bundles",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "bundles"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"bundles\": [\n    {\n      \"_id\": \"681098d705b4eb1a2c4def4b\",\n      \"name\": \"Basic Package\",\n      \"description\": \"Basic channel package\",\n      \"duration_days\": 30,\n      \"price\": 2999\n    },\n    ...\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Bundle by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost/api/bundles/681098d705b4eb1a2c4def4b",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "bundles",
+                "681098d705b4eb1a2c4def4b"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"_id\": \"681098d705b4eb1a2c4def4b\",\n  \"name\": \"Basic Package\",\n  \"description\": \"Basic channel package\",\n  \"duration_days\": 30,\n  \"price\": 2999\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/bundles",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "bundles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Bundle\",\n  \"description\": \"A test bundle\",\n  \"duration_days\": 30,\n  \"price\": 2999\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"_id\": \"<new_id>\",\n  \"name\": \"Test Bundle\",\n  \"description\": \"A test bundle\",\n  \"duration_days\": 30,\n  \"price\": 2999\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Bundle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/bundles/681098d705b4eb1a2c4def4b",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "bundles",
+                "681098d705b4eb1a2c4def4b"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Bundle Name\",\n  \"description\": \"Updated description\",\n  \"duration_days\": 60,\n  \"price\": 3999\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"_id\": \"681098d705b4eb1a2c4def4b\",\n  \"name\": \"Updated Bundle Name\",\n  \"description\": \"Updated description\",\n  \"duration_days\": 60,\n  \"price\": 3999\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Device",
+      "item": [
+        {
+          "name": "Get Device by Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost/api/device/device?device-code=ABCD",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "device"
+              ],
+              "query": [
+                {
+                  "key": "device-code",
+                  "value": "ABCD"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"macAddress\": \"AA:BB:CC:DD:EE:01\",\n  \"status\": \"active\",\n  \"expiresAt\": \"2025-05-11T12:00:00.000Z\",\n  \"code\": \"ABCD\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Connection Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost/api/device/connection-status?deviceCode=ABCD",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "connection-status"
+              ],
+              "query": [
+                {
+                  "key": "deviceCode",
+                  "value": "ABCD"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"status\": \"active\",\n  \"isConnected\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set Connection Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/device/connection-status",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "connection-status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceCode\": \"ABCD\",\n  \"status\": \"active\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"status\": \"active\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Generate Pairing Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/device/create-device-code",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "create-device-code"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mac_address\": \"AA:BB:CC:DD:EE:01\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"pairingCode\": \"ABCD\",\n  \"expiresAt\": \"2025-05-11T12:00:00.000Z\",\n  \"status\": \"active\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Connect TV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/device/connect-tv",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "connect-tv"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pairingCode\": \"ABCD\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"macAddress\": \"AA:BB:CC:DD:EE:01\",\n  \"status\": \"paired\",\n  \"expiresAt\": \"2025-05-11T12:00:00.000Z\",\n  \"bundle\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Connect Device to Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/device/connect-device",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "device",
+                "connect-device"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"bundleId\": \"681098d705b4eb1a2c4def4b\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"deviceId\": \"681081fb46b4fefb23a5248d\",\n  \"status\": \"active\",\n  \"bundle\": \"681098d705b4eb1a2c4def4b\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OTP",
+      "item": [
+        {
+          "name": "Verify Phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/otp/verify-phone",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "otp",
+                "verify-phone"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cellNumber\": \"+27 33 232 3232\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/otp/verify-otp",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "otp",
+                "verify-otp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cellNumber\": \"+27 33 232 3232\",\n  \"otp\": \"123456\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"accessToken\": \"jwt-token\",\n  \"deviceCode\": \"ABCD\",\n  \"user\": {\n    \"id\": \"6820831146b4fefb23a52493\",\n    \"cell_number\": \"+27 33 232 3232\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/auth/request-otp",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "request-otp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cellNumber\": \"+27 33 232 3232\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"otp\": \"123456\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/auth/login",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cellNumber\": \"+27 33 232 3232\",\n  \"otp\": \"123456\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"accessToken\": \"jwt-token\",\n  \"deviceCode\": \"ABCD\",\n  \"user\": {\n    \"id\": \"6820831146b4fefb23a52493\",\n    \"cell_number\": \"+27 33 232 3232\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get User Bundles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/user/user-bundle",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "user",
+                "user-bundle"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"bundles\": [\n    {\n      \"_id\": \"681098d705b4eb1a2c4def4b\",\n      \"name\": \"Basic Package\",\n      \"description\": \"Basic channel package\",\n      \"duration_days\": 30,\n      \"price\": 2999\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Redis",
+      "item": [
+        {
+          "name": "Set Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/redis/set",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "redis",
+                "set"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"exampleKey\",\n  \"value\": \"exampleValue\",\n  \"ttl\": 3600\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "\"Key set successfully\""
+            }
+          ]
+        },
+        {
+          "name": "Get Key",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost/api/redis/get?key=exampleKey",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "redis",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "exampleKey"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "\"exampleValue\""
+            }
+          ]
+        },
+        {
+          "name": "Delete Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost/api/redis/delete",
+              "host": [
+                "http://localhost"
+              ],
+              "path": [
+                "api",
+                "redis",
+                "delete"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"exampleKey\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "\"Key deleted successfully\""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
