@@ -7,8 +7,11 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import {createPairingCode} from "../services/pairingService";
 import {AppException} from "../../lib/AppException";
+import { useProtectedRoute } from '../config/useProtectedRoute';
 
 export default function PairDevicePage() {
+    useProtectedRoute();
+    
     const [macAddress, setMacAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [device, setDevice] = useState<{

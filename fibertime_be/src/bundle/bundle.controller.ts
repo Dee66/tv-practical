@@ -4,8 +4,19 @@
  * This controller handles all operations related to bundles, including creating, retrieving, updating,
  * and fetching details of specific bundles.
  */
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { Roles } from "../auth/roles.decorator";
+import { RolesGuard } from "../auth/roles.guard";
 import { BundleService } from "./bundle.service";
 import { CreateBundleDto } from "./dto/create-bundle.dto";
 import { UpdateBundleDto } from "./dto/update-bundle.dto";
@@ -14,7 +25,6 @@ import { UpdateBundleDto } from "./dto/update-bundle.dto";
 @Controller("bundles")
 export class BundleController {
   constructor(private readonly bundleService: BundleService) {}
-
   /**
    * GET /bundles
    *
@@ -49,6 +59,8 @@ export class BundleController {
    * @param createBundleDto - The data transfer object containing the details of the bundle to create.
    * @returns The created bundle.
    */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("admin")
   @Post()
   async create(@Body() createBundleDto: CreateBundleDto) {
     return this.bundleService.create(createBundleDto);
@@ -63,6 +75,8 @@ export class BundleController {
    * @param updateBundleDto - The data transfer object containing the updated details of the bundle.
    * @returns The updated bundle.
    */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("admin")
   @Patch(":id")
   async update(
     @Param("id") id: string,

@@ -13,6 +13,9 @@ export class User {
 
   @Prop({ type: Types.ObjectId, ref: "Bundle", default: null })
   bundle: Types.ObjectId | Bundle | null;
+
+  @Prop({ type: String, enum: ["user", "admin", "support"], default: "user" })
+  role: string;
 }
 
 export type UserDocument = User & Document;

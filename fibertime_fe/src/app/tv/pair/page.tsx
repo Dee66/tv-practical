@@ -10,11 +10,13 @@ import { AppException } from '../../../lib/AppException';
 import PairingSimulator from '../../components/PairingSimulator';
 import TVSimulator from '../../components/TVSimulator';
 import { useSimulator } from '../../context/simulatorContext';
-import styles from '../../Home.module.css';
 import { createPairingCode } from '../../services/pairingService';
+import { useProtectedRoute } from '../../config/useProtectedRoute';
 
 export default function PairTVPage() {
-    const [macAddress, setMacAddress] = useState('AA:BB:CC:DD:EE:02');
+    useProtectedRoute();
+    
+    const [macAddress, setMacAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [device, setDevice] = useState<{
         deviceId: string;

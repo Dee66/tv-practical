@@ -12,7 +12,6 @@ export function useProtectedRoute() {
         if (loading) return; // Wait for loading to complete
 
         if (protectedRoutes.includes(pathname) && !isAuthenticated) {
-            console.log("[useProtectedRoute] Unauthenticated, redirecting to /auth/login");
             router.replace('/auth/login');
         }
     }, [isAuthenticated, pathname, router, loading]);

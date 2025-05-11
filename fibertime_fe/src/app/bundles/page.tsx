@@ -7,8 +7,11 @@ import { useAuth } from '../context/authContext';
 import { useSimulator } from '../context/simulatorContext';
 import { fetchAllBundles, fetchUserBundle } from '../services/bundleService';
 import BundleList from './components/BundleList';
+import { useProtectedRoute } from '../config/useProtectedRoute';
 
 export default function BundlesPage() {
+    useProtectedRoute();
+
     const { token, isAuthenticated, subscribe } = useAuth();
     const { closeAllSimulators } = useSimulator();
     const [bundles, setBundles] = useState([]);
