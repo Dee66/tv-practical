@@ -27,7 +27,7 @@ export async function createPairingCode(macAddress: string): Promise<Device> {
 
 export async function validatePairingCode(pairingCode: string): Promise<PairDeviceResponse> {
     try {
-        return await api.post<PairDeviceResponse>(`/api/device/connect-tv`, {pairingCode});
+        return await api.authPost<PairDeviceResponse>(`/api/device/connect-tv`, {pairingCode});
     } catch (err) {
         throw AppException.from(err);
     }

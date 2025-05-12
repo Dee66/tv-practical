@@ -41,16 +41,16 @@ describe('pairingService', () => {
                 expiresAt: '2025-01-01T00:00:00Z',
                 bundle: { _id: '1', name: 'Bundle', description: '', duration_days: 30, price: 10 },
             };
-            (api.post as jest.Mock).mockResolvedValue(mockResponse);
+            (api.authPost as jest.Mock).mockResolvedValue(mockResponse);
 
             const result = await pairingService.validatePairingCode('PAIR123');
             expect(result).toEqual(mockResponse);
-            expect(api.post).toHaveBeenCalledWith('/api/device/connect-tv', { pairingCode: 'PAIR123' });
+            expect(api.authPost).toHaveBeenCalledWith('/api/device/connect-tv', { pairingCode: 'PAIR123' });
         });
 
         it('throws AppException on error', async () => {
             const error = { errorCode: 'INVALID_CODE', message: 'Invalid pairing code' };
-            (api.post as jest.Mock).mockRejectedValue(error);
+            (api.authPost as jest.Mock).mockRejectedValue(error);
 
             await expect(pairingService.validatePairingCode('BADCODE')).rejects.toBeInstanceOf(AppException);
         });

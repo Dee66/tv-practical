@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import WifiIcon from '@mui/icons-material/Wifi';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
