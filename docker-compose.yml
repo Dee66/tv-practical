@@ -16,7 +16,7 @@ services:
       context: ./fibertime_fe
       dockerfile: ./Dockerfile.dev
     volumes:
-      - ./fibertime_fe:/app:ro
+      - ./fibertime_fe:/app
       - ./fibertime_fe/package-lock.json:/app/package-lock.json
       - fe-next:/app/.next
       - fe-modules:/app/node_modules
@@ -32,7 +32,7 @@ services:
     build:
       context: ./fibertime_be
       dockerfile: ./Dockerfile.dev
-    command: sh -c "node dist/seed.js && node dist/main.js"
+    command: sh -c "node dist/main.js"
     volumes:
       - ./fibertime_be:/app
       - be-modules:/app/node_modules

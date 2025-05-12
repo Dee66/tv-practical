@@ -59,13 +59,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get("user-bundle")
   async getUserBundle(@Req() req: any) {
-    try {
-      const bundle = await this.userService.getUserBundle(String(req.user._id));
-      const dataBalance = await this.userService.getUserDataBalance(String(req.user._id));
-      return { bundle, dataBalance };
-    } catch (error) {
-      throw new HttpException(error.message || "Server Error", 500);
-    }
+    const bundle = await this.userService.getUserBundle(String(req.user._id));
+    const dataBalance = await this.userService.getUserDataBalance(String(req.user._id));
+    return { bundle, dataBalance };
   }
 
   /**

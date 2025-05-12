@@ -1,14 +1,12 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { ErrorCodes } from "../common/constants/error-codes";
 import { Bundle } from "./bundle.schema";
 import { CreateBundleDto } from "./dto/create-bundle.dto";
 import { UpdateBundleDto } from "./dto/update-bundle.dto";
+import { BundleResponseDto } from "./dto/bundle-response.dto";
+import { throwAppException } from "../common/utils/throw-exception.util";
+import { ErrorCodes } from "../common/constants/error-codes";
 
 @Injectable()
 export class BundleService {
@@ -16,47 +14,42 @@ export class BundleService {
     @InjectModel(Bundle.name) private readonly bundleModel: Model<Bundle>,
   ) {}
 
-  async findAll() {
-    return this.bundleModel.find().exec();
+  async findAll(): Promise<BundleResponseDto[]> {
+    const bundles = await this.bundleModel.find().exec();
+    return bundles.map(bundle => new BundleResponseDto(bundle));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<BundleResponseDto> {
     const bundle = await this.bundleModel.findById(id).exec();
     if (!bundle) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: `Bundle with id ${id} not found`,
-      });
+      throwAppException(ErrorCodes.NOT_FOUND);
     }
-    return bundle;
+    return new BundleResponseDto(bundle);
   }
 
-  // Create a new bundle (prevent duplicates by name)
-  async create(createBundleDto: CreateBundleDto) {
+  async create(createBundleDto: CreateBundleDto): Promise<BundleResponseDto> {
     const existing = await this.bundleModel.findOne({
       name: createBundleDto.name,
     });
     if (existing) {
-      throw new ConflictException({
-        errorCode: ErrorCodes.VALIDATION_ERROR,
-        message: "Bundle with this name already exists",
-      });
+      throwAppException(ErrorCodes.VALIDATION_ERROR, "Bundle with this name already exists");
     }
-    return await this.bundleModel.create(createBundleDto);
+    const bundle = await this.bundleModel.create(createBundleDto);
+    return new BundleResponseDto(bundle);
   }
 
-  async update(id: string, updateBundleDto: UpdateBundleDto) {
+  async update(
+    id: string,
+    updateBundleDto: UpdateBundleDto,
+  ): Promise<BundleResponseDto> {
     const bundle = await this.bundleModel.findByIdAndUpdate(
       id,
       { $set: updateBundleDto },
       { new: true },
     );
     if (!bundle) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: `Bundle with id ${id} not found`,
-      });
+      throwAppException(ErrorCodes.NOT_FOUND);
     }
-    return bundle;
+    return new BundleResponseDto(bundle);
   }
 }

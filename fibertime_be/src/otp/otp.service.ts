@@ -1,15 +1,8 @@
-import {
-  BadRequestException,
-  forwardRef,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  Logger,
-} from "@nestjs/common";
+import { forwardRef, Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { ErrorCodeMessages, ErrorCodes } from "../common/constants/error-codes";
+import { ErrorCodes } from "../common/constants/error-codes";
+import { throwAppException } from "../common/utils/throw-exception.util";
 import { User, UserDocument } from "../user/user.schema";
 import { WebSocketGatewayService } from "../websocket/websocket.gateway";
 import { OTP, OTPDocument, OTPStatus } from "./otp.schema";
@@ -38,10 +31,7 @@ export class OtpService {
     });
 
     if (!otpDoc) {
-      throw new BadRequestException({
-        errorCode: ErrorCodes.OTP_INVALID,
-        message: ErrorCodeMessages[ErrorCodes.OTP_INVALID],
-      });
+      throwAppException(ErrorCodes.OTP_INVALID);
     }
 
     return otpDoc;
@@ -58,10 +48,7 @@ export class OtpService {
   // Verify cell number, create user if does not exist
   async verifyCellNumber(cellNumber: string) {
     if (!cellNumber) {
-      throw new BadRequestException({
-        errorCode: ErrorCodes.VALIDATION_ERROR,
-        message: "Cell number is required.",
-      });
+      throwAppException(ErrorCodes.VALIDATION_ERROR, "Cell number is required.");
     }
     let user = await this.userModel.findOne({ cell_number: cellNumber });
     if (!user) {
@@ -69,14 +56,11 @@ export class OtpService {
         user = await this.userModel.create({ cell_number: cellNumber });
       } catch (error) {
         this.logger.error("Error creating user:", error);
-        throw new HttpException(
-          {
-            errorCode: ErrorCodes.INTERNAL_ERROR,
-            message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
-            details: error?.message || error,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        throwTypedException("custom", {
+          errorCode: ErrorCodes.INTERNAL_ERROR,
+          details: error?.message || error,
+          status: 500,
+        });
       }
     }
 
@@ -90,9 +74,9 @@ export class OtpService {
   // Generate and store/send the OTP
   async generateOtp(cellNumber: string) {
     if (!cellNumber) {
-      throw new BadRequestException({
+      throwTypedException("badrequest", {
         errorCode: ErrorCodes.VALIDATION_ERROR,
-        message: "Cell number is required.",
+        details: "Cell number is required.",
       });
     }
     const otp = this.createOtp();
@@ -115,14 +99,11 @@ export class OtpService {
       this.webSocketGateway.emitOtpResponse(cellNumber, otp);
     } catch (error) {
       this.logger.error("Error generating OTP:", error);
-      throw new HttpException(
-        {
-          errorCode: ErrorCodes.INTERNAL_ERROR,
-          message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
-          details: error?.message || error,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throwTypedException("custom", {
+        errorCode: ErrorCodes.INTERNAL_ERROR,
+        details: error?.message || error,
+        status: 500,
+      });
     }
 
     return {

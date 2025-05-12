@@ -4,9 +4,8 @@
  * This controller handles all operations related to OTP (One-Time Password) management, including
  * verifying phone numbers and validating OTPs for authentication purposes.
  */
-import { Body, Controller, Logger, Post, Res } from "@nestjs/common";
+import { Body, Controller, Logger, Post } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
-import { Response as ExpressResponse } from "express";
 import { AuthService } from "../auth/auth.service";
 import { LoginDto } from "../auth/dto/login.dto";
 import { GenerateOtpDto } from "./dto/generate-otp.dto";
@@ -80,16 +79,8 @@ export class OtpController {
     },
   })
   @Post("verify-otp")
-  async verifyOtp(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
-    try {
-      await this.otpService.validateOtp(dto.cellNumber, dto.otp);
-      return await this.authService.login(dto.cellNumber);
-    } catch (err) {
-      console.error("Login error:", err);
-      res.status(500).json({ success: false, message: "Server error" });
-    }
+  async verifyOtp(@Body() dto: LoginDto) {
+    await this.otpService.validateOtp(dto.cellNumber, dto.otp);
+    return this.authService.login(dto.cellNumber);
   }
 }

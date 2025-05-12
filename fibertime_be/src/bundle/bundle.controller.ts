@@ -14,12 +14,12 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
-  ApiParam,
   ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
@@ -31,7 +31,7 @@ import { UpdateBundleDto } from "./dto/update-bundle.dto";
 @ApiTags("bundles")
 @Controller("bundles")
 export class BundleController {
-  constructor(private readonly bundleService: BundleService) {}
+  constructor(private readonly bundleService: BundleService) { }
 
   @ApiOperation({ summary: "Retrieve all bundles" })
   @ApiResponse({ status: 200, description: "A list of all bundles." })

@@ -1,5 +1,5 @@
-import { AppException } from './AppException';
 import { getAuthToken } from "../app/context/authContext";
+import { AppException } from './AppException';
 
 export type QueryParams = Record<string, string | number | boolean | null | undefined>;
 

@@ -4,8 +4,7 @@
  * This controller handles all authentication-related operations, including requesting OTPs, logging in,
  * and checking the authentication status of a user.
  */
-import { Body, Controller, Post, Res, Logger } from "@nestjs/common";
-import { Response as ExpressResponse } from "express";
+import { Body, Controller, Post, Logger, BadGatewayException } from "@nestjs/common";
 import { UserService } from "../user/user.service";
 import { OtpService } from "../otp/otp.service";
 import { AuthService } from "./auth.service";
@@ -30,17 +29,13 @@ export class AuthController {
    * @returns A response indicating whether the OTP was successfully sent.
    */
   @Post("request-otp")
-  async requestOtp(
-    @Body("cellNumber") cellNumber: string,
-    @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  async requestOtp(@Body("cellNumber") cellNumber: string) {
     const user = await this.userService.findOrCreateClient(cellNumber);
     if (!user) {
-      res.status(502).json({
+      throw new BadGatewayException({
         success: false,
         message: "Something has gone horribly wrong, please try again",
       });
-      return;
     }
     return this.authService.requestOtp({ cellNumber });
   }
@@ -55,16 +50,8 @@ export class AuthController {
    * @returns A JWT token if the login is successful, or an error message if it fails.
    */
   @Post("login")
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
-    try {
-      await this.otpService.validateOtp(dto.cellNumber, dto.otp);
-      return await this.authService.login(dto.cellNumber);
-    } catch (err) {
-      this.logger.error("Login error:", err);
-      res.status(500).json({ success: false, message: "Server error" });
-    }
+  async login(@Body() dto: LoginDto) {
+    await this.otpService.validateOtp(dto.cellNumber, dto.otp);
+    return this.authService.login(dto.cellNumber);
   }
 }

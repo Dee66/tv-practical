@@ -1,24 +1,24 @@
 import {
-  BadRequestException,
   forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-  NotFoundException,
   HttpException,
   HttpStatus,
+  Inject,
+  Injectable,
+  Logger
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { User, UserDocument } from "../user/user.schema";
-import { WebSocketGatewayService } from "../websocket/websocket.gateway"; // Import WebSocket service
-import { Device, DeviceDocument, DeviceStatus } from "./device.schema";
+import { Bundle, BundleDocument } from "../bundle/bundle.schema";
+import { ErrorCodeMessages, ErrorCodes } from "../common/constants/error-codes";
+import { throwAppException } from "../common/utils/throw-exception.util";
 import {
   Subscription,
   SubscriptionStatus,
 } from "../subscriptions/subscriptions.schema";
-import { Bundle, BundleDocument } from "../bundle/bundle.schema";
-import { ErrorCodes, ErrorCodeMessages } from "../common/constants/error-codes";
+import { User, UserDocument } from "../user/user.schema";
+import { WebSocketGatewayService } from "../websocket/websocket.gateway";
+import { Device, DeviceDocument, DeviceStatus } from "./device.schema";
+import { DeviceResponseDto } from "./dto/device-response.dto";
 
 @Injectable()
 export class DeviceService {
@@ -35,58 +35,51 @@ export class DeviceService {
     private readonly bundleModel: Model<BundleDocument>,
     @Inject(forwardRef(() => WebSocketGatewayService))
     private readonly webSocketGateway: WebSocketGatewayService,
-  ) {}
+  ) { }
 
-  // GET /api/device/device?device-code=XXXX
-  async getDeviceByCode(deviceCode: string) {
+  async getDeviceByCode(deviceCode: string): Promise<DeviceResponseDto> {
     const device = await this.deviceModel.findOne({ pairingCode: deviceCode });
     if (!device) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: `No device found with the provided code ${deviceCode}`,
-      });
+      throwAppException(
+        ErrorCodes.NOT_FOUND,
+        `No device found with the provided code ${deviceCode}`,
+      );
     }
-    return {
-      deviceId: device._id as string,
-      macAddress: device.mac_address,
-      status: device.status,
-      expiresAt: device.expires_at,
-      code: device.pairingCode,
-    };
+    return new DeviceResponseDto(device);
   }
 
-  async getUserDevice(userId: string): Promise<Device | null> {
+  async getUserDevice(userId: string): Promise<DeviceResponseDto | null> {
     const device = await this.deviceModel
-      .findOne({ owner: userId, status: "ACTIVE" })
+      .findOne({ owner: userId, status: DeviceStatus.ACTIVE })
       .exec();
-    return device || null;
+    return device ? new DeviceResponseDto(device) : null;
   }
 
-  async setConnectionStatus(deviceCode: string, deviceStatus: DeviceStatus) {
+  async setConnectionStatus(
+    deviceCode: string,
+    deviceStatus: DeviceStatus,
+  ): Promise<DeviceResponseDto> {
     this.logger.log(
       `[PUT] setConnectionStatus called: code=${deviceCode}, status=${deviceStatus}`,
     );
 
     const device = await this.deviceModel.findOne({ pairingCode: deviceCode });
     if (!device) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: ErrorCodeMessages[ErrorCodes.NOT_FOUND],
-      });
+      throwAppException(
+        ErrorCodes.NOT_FOUND,
+        `Device with code ${deviceCode} not found`,
+      );
     }
     device.status = deviceStatus;
     await device.save();
-    return {
-      deviceId: device._id as string,
-      status: device.status,
-    };
+    return new DeviceResponseDto(device);
   }
 
   async createDevice(
     userId: string,
     status: DeviceStatus,
     macAddress: string,
-  ): Promise<Device> {
+  ): Promise<DeviceResponseDto> {
     const device = await this.deviceModel.create({
       owner: userId,
       status: status,
@@ -95,10 +88,10 @@ export class DeviceService {
       expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
     });
     await device.save();
-    return device;
+    return new DeviceResponseDto(device);
   }
 
-  async createPairingCode(mac_address: string) {
+  async createPairingCode(mac_address: string): Promise<DeviceResponseDto> {
     try {
       const pairingCode = this.generatePairingCode();
       const expiresAt = this.calculateExpiry(5);
@@ -107,15 +100,17 @@ export class DeviceService {
         pairingCode,
         expiresAt,
       );
-      return {
-        deviceId: device._id as string,
-        pairingCode: device.pairingCode,
-        expiresAt: device.expires_at,
-        status: device.status,
-      };
+      return new DeviceResponseDto(device);
     } catch (err) {
       this.logger.error("Error in createPairingCode:", err);
-      throw err;
+      throw new HttpException(
+        {
+          errorCode: ErrorCodes.INTERNAL_ERROR,
+          message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
+          details: err?.message || err,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -154,10 +149,10 @@ export class DeviceService {
   private async linkBundleToUser(userId: string, bundleId: string) {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.USER_NOT_FOUND,
-        message: ErrorCodeMessages[ErrorCodes.USER_NOT_FOUND],
-      });
+      throwAppException(
+        ErrorCodes.USER_NOT_FOUND,
+        `User with id ${userId} not found`,
+      );
     }
     // Set the bundle only if it's different
     if (!user.bundle || user.bundle.toString() !== bundleId) {
@@ -171,13 +166,13 @@ export class DeviceService {
     deviceId: string,
     bundleId: string,
     userId: string,
-  ) {
+  ): Promise<DeviceResponseDto> {
     const device = await this.deviceModel.findOne({ _id: deviceId });
     if (!device) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: "Device not found, unable to link Bundle",
-      });
+      throwAppException(
+        ErrorCodes.NOT_FOUND,
+        "Device not found, unable to link Bundle",
+      );
     }
     device.bundle = new Types.ObjectId(bundleId);
     device.status = DeviceStatus.CONNECTED;
@@ -194,10 +189,7 @@ export class DeviceService {
     // Fetch the bundle to get the data amount
     const bundle = await this.bundleModel.findById(bundleId);
     if (!bundle) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: "Bundle not found",
-      });
+      throwAppException(ErrorCodes.NOT_FOUND, "Bundle not found");
     }
 
     // Create new subscription
@@ -212,34 +204,21 @@ export class DeviceService {
       ),
     });
 
-    return {
-      deviceId: device._id as string,
-      status: device.status,
-      bundle: device.bundle,
-    };
+    return new DeviceResponseDto(device);
   }
 
-  async pairDevice(pairingCode: string): Promise<Record<string, any>> {
+  async pairDevice(pairingCode: string): Promise<DeviceResponseDto> {
     const device = await this.deviceModel.findOne({ pairingCode });
     if (!device) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.NOT_FOUND,
-        message: "Pairing code not found",
-      });
+      throwAppException(ErrorCodes.NOT_FOUND, "Pairing code not found");
     }
 
     if (device.status === DeviceStatus.CONNECTED) {
-      throw new BadRequestException({
-        errorCode: ErrorCodes.VALIDATION_ERROR,
-        message: "Device already paired",
-      });
+      throwAppException(ErrorCodes.VALIDATION_ERROR, "Device already paired");
     }
 
     if (device.expires_at && new Date() > device.expires_at) {
-      throw new BadRequestException({
-        errorCode: ErrorCodes.VALIDATION_ERROR,
-        message: "Pairing code expired",
-      });
+      throwAppException(ErrorCodes.VALIDATION_ERROR, "Pairing code expired");
     }
 
     // Update device status to PAIRED
@@ -249,12 +228,6 @@ export class DeviceService {
     // Emit the paired event
     this.webSocketGateway.emitDevicePaired(device._id);
 
-    return {
-      deviceId: device._id as string,
-      macAddress: device.mac_address,
-      status: device.status,
-      expiresAt: device.expires_at,
-      bundle: device.bundle,
-    };
+    return new DeviceResponseDto(device);
   }
 }

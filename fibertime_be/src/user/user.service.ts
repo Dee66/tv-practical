@@ -1,9 +1,6 @@
 import {
   Injectable,
   Logger,
-  NotFoundException,
-  HttpException,
-  HttpStatus,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -14,7 +11,9 @@ import {
   Subscription,
   SubscriptionStatus,
 } from "../subscriptions/subscriptions.schema";
-import { ErrorCodes, ErrorCodeMessages } from "../common/constants/error-codes";
+import { ErrorCodes } from "../common/constants/error-codes";
+import { UserResponseDto } from "./dto/user-response.dto";
+import { throwAppException } from "../common/utils/throw-exception.util";
 
 @Injectable()
 export class UserService {
@@ -26,47 +25,38 @@ export class UserService {
     private subscriptionModel: Model<Subscription>,
   ) {}
 
-  async findById(id: string): Promise<UserDocument> {
+  async findById(id: string): Promise<UserResponseDto> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.USER_NOT_FOUND,
-        message: ErrorCodeMessages[ErrorCodes.USER_NOT_FOUND],
-      });
+      throwAppException(ErrorCodes.USER_NOT_FOUND);
     }
-    return user;
+    return new UserResponseDto(user);
   }
 
-  async findByCellNumber(cell_number: string): Promise<UserDocument | null> {
+  async findByCellNumber(cell_number: string): Promise<UserResponseDto | null> {
     const user = await this.userModel.findOne({ cell_number }).exec();
-    return user || null;
+    return user ? new UserResponseDto(user) : null;
   }
 
-  async findOneWithBundle(userId: string): Promise<UserDocument | null> {
+  async findOneWithBundle(userId: string): Promise<UserResponseDto | null> {
     const user = await this.userModel
       .findById(userId)
       .populate("bundle")
       .exec();
-    return user || null;
+    return user ? new UserResponseDto(user) : null;
   }
 
-  async create(cellNumber: string): Promise<UserDocument> {
+  async create(cellNumber: string): Promise<UserResponseDto> {
     try {
-      return new this.userModel({ cell_number: cellNumber }).save();
+      const user = await new this.userModel({ cell_number: cellNumber }).save();
+      return new UserResponseDto(user);
     } catch (error) {
       this.logger.error(`Error creating user: ${error}`);
-      throw new HttpException(
-        {
-          errorCode: ErrorCodes.INTERNAL_ERROR,
-          message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
-          details: error?.message || error,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throwAppException(ErrorCodes.INTERNAL_ERROR, error?.message || error);
     }
   }
 
-  async findOrCreateClient(cellNumber: string): Promise<UserDocument> {
+  async findOrCreateClient(cellNumber: string): Promise<UserResponseDto> {
     let user = await this.findByCellNumber(cellNumber);
     if (!user) {
       user = await this.create(cellNumber);
@@ -77,25 +67,19 @@ export class UserService {
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<UserDocument> {
+  ): Promise<UserResponseDto> {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .exec();
     if (!updatedUser) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.USER_NOT_FOUND,
-        message: ErrorCodeMessages[ErrorCodes.USER_NOT_FOUND],
-      });
+      throwAppException(ErrorCodes.USER_NOT_FOUND);
     }
-    return updatedUser;
+    return new UserResponseDto(updatedUser);
   }
 
   async getUserBundle(userId: string): Promise<Bundle | null> {
     if (!userId) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.USER_NOT_FOUND,
-        message: "No user in request",
-      });
+      throwAppException(ErrorCodes.USER_NOT_FOUND, "No user in request");
     }
     const user = await this.userModel
       .findById(userId)
@@ -106,10 +90,7 @@ export class UserService {
 
   async getUserDataBalance(userId: string): Promise<number | null> {
     if (!userId) {
-      throw new NotFoundException({
-        errorCode: ErrorCodes.USER_NOT_FOUND,
-        message: "No user in request",
-      });
+      throwAppException(ErrorCodes.USER_NOT_FOUND, "No user in request");
     }
     const subscription = await this.subscriptionModel
       .findOne({
