@@ -23,6 +23,11 @@ This project implements the back-end services required for a customer to connect
 - Docker and Docker Compose installed.
 - Ensure nothing is running on port `27012`.
 
+## Project Walkthrough (Audio)
+A narrated walkthrough of the project is available in the included `fibertime.mp3` file.  
+This audio recording explains the architecture, security, and user flow, and guides you through the main features and API endpoints.  
+You can listen to this file for a concise overview of how the system works and how to use the provided APIs.
+
 ## Setup Instructions
 1. Clone the repository:
    ```bash
