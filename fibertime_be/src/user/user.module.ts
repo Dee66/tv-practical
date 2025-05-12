@@ -4,9 +4,9 @@ import { User, UserSchema } from "./user.schema";
 import { UserService } from "./user.service";
 import { UserController } from "./user.controller";
 import { AuthModule } from "../auth/auth.module";
-import { JwtStrategy } from "src/auth/jwt.strategy";
+import { JwtStrategy } from "../auth/jwt.strategy";
 import { JwtModule } from "@nestjs/jwt";
-import { SubscriptionsModule } from "src/subscriptions/subscriptions.module";
+import { SubscriptionsModule } from "../subscriptions/subscriptions.module";
 
 @Module({
   imports: [

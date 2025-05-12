@@ -10,13 +10,13 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { WebSocketGatewayService } from "src/websocket/websocket.gateway";
+import { WebSocketGatewayService } from "../websocket/websocket.gateway";
 import { DeviceService } from "../device/device.service";
 import { OTP, OTPDocument, OTPStatus } from "../otp/otp.schema";
 import { OtpService } from "../otp/otp.service";
 import { UserService } from "../user/user.service";
 import { RequestOtpDto } from "./dto/request-otp.dto";
-import { User, UserDocument } from "src/user/user.schema";
+import { User, UserDocument } from "../user/user.schema";
 
 @Injectable()
 export class AuthService {

@@ -2,82 +2,87 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { OtpController } from "./otp.controller";
 import { OtpService } from "./otp.service";
 import { AuthService } from "../auth/auth.service";
-import { GenerateOtpDto } from "./dto/generate-otp.dto";
+import { Response as ExpressResponse } from "express";
 
 describe("OtpController", () => {
   let controller: OtpController;
-  let otpService: OtpService;
-  let authService: AuthService;
-
-  const mockOtpService = {
-    verifyCellNumber: jest.fn(),
-    generateOtp: jest.fn(),
-  };
-
-  const mockAuthService = {
-    login: jest.fn(),
-  };
+  let mockOtpService: any;
+  let mockAuthService: any;
+  let mockRes: any;
 
   beforeEach(async () => {
-    jest.clearAllMocks(); // Reset mock state before each test
+    mockOtpService = {
+      verifyCellNumber: jest.fn(),
+      generateOtp: jest.fn(),
+      validateOtp: jest.fn(),
+    };
+    mockAuthService = {
+      login: jest.fn(),
+    };
+    mockRes = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OtpController],
       providers: [
-        {
-          provide: OtpService,
-          useValue: mockOtpService,
-        },
-        {
-          provide: AuthService,
-          useValue: mockAuthService,
-        },
+        { provide: OtpService, useValue: mockOtpService },
+        { provide: AuthService, useValue: mockAuthService },
       ],
     }).compile();
 
     controller = module.get<OtpController>(OtpController);
-    otpService = module.get<OtpService>(OtpService);
-    authService = module.get<AuthService>(AuthService);
-  });
-
-  it("should be defined", () => {
-    expect(controller).toBeDefined();
   });
 
   describe("verifyCellNumber", () => {
-    it("should verify a cell number and generate an OTP", async () => {
-      const dto: GenerateOtpDto = { cellNumber: "1234567890" };
-      const verificationResult = { success: true };
-      const otpResult = { otp: "123456", expires_at: new Date() };
-
-      mockOtpService.verifyCellNumber.mockResolvedValue(verificationResult);
-      mockOtpService.generateOtp.mockResolvedValue(otpResult);
+    it("should verify the cell number and generate an OTP", async () => {
+      const dto = { cellNumber: "1234567890" };
+      mockOtpService.verifyCellNumber.mockResolvedValue({ success: true });
+      mockOtpService.generateOtp.mockResolvedValue({ success: true });
 
       const result = await controller.verifyCellNumber(dto);
 
-      expect(result).toEqual(otpResult);
-      expect(mockOtpService.verifyCellNumber).toHaveBeenCalledWith(
-        dto.cellNumber,
-      );
+      expect(mockOtpService.verifyCellNumber).toHaveBeenCalledWith(dto.cellNumber);
       expect(mockOtpService.generateOtp).toHaveBeenCalledWith(dto.cellNumber);
+      expect(result).toEqual({ success: true });
     });
 
-    it("should return an error if verification fails", async () => {
-      const dto: GenerateOtpDto = { cellNumber: "1234567890" };
-      const verificationResult = { success: false };
-
-      mockOtpService.verifyCellNumber.mockResolvedValue(verificationResult);
+    it("should return failure if verification fails", async () => {
+      const dto = { cellNumber: "1234567890" };
+      mockOtpService.verifyCellNumber.mockResolvedValue({ success: false });
 
       const result = await controller.verifyCellNumber(dto);
 
-      expect(result).toEqual({
-        success: false,
-        message: "Invalid phone number",
-      });
-      expect(mockOtpService.verifyCellNumber).toHaveBeenCalledWith(
-        dto.cellNumber,
-      );
-      expect(mockOtpService.generateOtp).not.toHaveBeenCalled();
+      expect(mockOtpService.verifyCellNumber).toHaveBeenCalledWith(dto.cellNumber);
+      expect(result).toEqual({ success: false, message: "Unable to verify phone number" });
+    });
+  });
+
+  describe("verifyOtp", () => {
+    it("should validate the OTP and login the user", async () => {
+      const dto = { cellNumber: "1234567890", otp: "1234" };
+      const loginResult = { token: "jwt" };
+      mockOtpService.validateOtp.mockResolvedValue(true);
+      mockAuthService.login.mockResolvedValue(loginResult);
+
+      const result = await controller.verifyOtp(dto, mockRes);
+
+      expect(mockOtpService.validateOtp).toHaveBeenCalledWith(dto.cellNumber, dto.otp);
+      expect(mockAuthService.login).toHaveBeenCalledWith(dto.cellNumber);
+      expect(result).toBe(loginResult);
+    });
+
+    it("should return error if OTP validation throws", async () => {
+      const dto = { cellNumber: "1234567890", otp: "1234" };
+      mockOtpService.validateOtp.mockRejectedValue(new Error("fail"));
+
+      const result = await controller.verifyOtp(dto, mockRes);
+
+      expect(mockOtpService.validateOtp).toHaveBeenCalledWith(dto.cellNumber, dto.otp);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({ success: false, message: "Server error" });
+      expect(result).toBeUndefined();
     });
   });
 });

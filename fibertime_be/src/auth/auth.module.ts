@@ -11,7 +11,7 @@ import { WebSocketModule } from "../websocket/websocket.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtStrategy } from "./jwt.strategy";
-import { SubscriptionsModule } from "src/subscriptions/subscriptions.module";
+import { SubscriptionsModule } from "../subscriptions/subscriptions.module";
 
 @Module({
   imports: [

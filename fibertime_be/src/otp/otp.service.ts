@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { User, UserDocument } from "../user/user.schema";
 import { OTP, OTPDocument, OTPStatus } from "./otp.schema";
-import { WebSocketGatewayService } from "src/websocket/websocket.gateway";
+import { WebSocketGatewayService } from "../websocket/websocket.gateway";
 
 @Injectable()
 export class OtpService {

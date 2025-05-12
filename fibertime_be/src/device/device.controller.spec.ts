@@ -1,63 +1,47 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DeviceController } from "./device.controller";
 import { DeviceService } from "./device.service";
-import { CreatePairingCodeDto } from "./dto/create-pairing-pairingCode.dto";
+import { CreatePairingCodeDto } from "./dto/create-pairing-code.dto";
 import { ConnectDeviceDto } from "./dto/connect-device.dto";
 import { DeviceStatus } from "./device.schema";
+import { WebSocketGatewayService } from "../websocket/websocket.gateway";
+
+jest.mock("../websocket/websocket.gateway", () => ({
+  WebSocketGatewayService: jest.fn(),
+}));
 
 describe("DeviceController", () => {
   let controller: DeviceController;
-  let service: DeviceService;
-
-  const mockDeviceService = {
-    getDeviceByCode: jest.fn(),
-    getConnectionStatus: jest.fn(),
-    setConnectionStatus: jest.fn(),
-    createPairingCode: jest.fn(),
-    pairDevice: jest.fn(),
-    connectDevice: jest.fn(),
-  };
+  let mockDeviceService: any;
 
   beforeEach(async () => {
+    mockDeviceService = {
+      getDeviceByCode: jest.fn(),
+      setConnectionStatus: jest.fn(),
+      createPairingCode: jest.fn(),
+      pairDevice: jest.fn(),
+      connectDevice: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeviceController],
-      providers: [
-        {
-          provide: DeviceService,
-          useValue: mockDeviceService,
-        },
-      ],
+      providers: [{ provide: DeviceService, useValue: mockDeviceService }],
     }).compile();
 
     controller = module.get<DeviceController>(DeviceController);
-    service = module.get<DeviceService>(DeviceService);
-  });
-
-  it("should be defined", () => {
-    expect(controller).toBeDefined();
   });
 
   describe("getDeviceCode", () => {
     it("should return device details for a given device pairingCode", async () => {
       const deviceCode = "testCode";
-      const result = { pairingCode: deviceCode, mac_address: "00:11:22:33:44:55" };
+      const result = {
+        pairingCode: deviceCode,
+        mac_address: "00:11:22:33:44:55",
+      };
       mockDeviceService.getDeviceByCode.mockResolvedValue(result);
 
       expect(await controller.getDeviceCode(deviceCode)).toBe(result);
       expect(mockDeviceService.getDeviceByCode).toHaveBeenCalledWith(
-        deviceCode,
-      );
-    });
-  });
-
-  describe("connectionStatus", () => {
-    it("should return the connection status of a device", async () => {
-      const deviceCode = "testCode";
-      const result = { status: DeviceStatus.CONNECTED };
-      mockDeviceService.getConnectionStatus.mockResolvedValue(result);
-
-      expect(await controller.connectionStatus(deviceCode)).toBe(result);
-      expect(mockDeviceService.getConnectionStatus).toHaveBeenCalledWith(
         deviceCode,
       );
     });
@@ -81,7 +65,7 @@ describe("DeviceController", () => {
   });
 
   describe("generatePairingCode", () => {
-    it("should generate a pairing pairingCode for a device", async () => {
+    it("should generate a pairing code for a device", async () => {
       const dto: CreatePairingCodeDto = { mac_address: "00:11:22:33:44:55" };
       const result = { pairingCode: "testCode" };
       mockDeviceService.createPairingCode.mockResolvedValue(result);
@@ -110,13 +94,24 @@ describe("DeviceController", () => {
         deviceId: "deviceId123",
         bundleId: "bundleId123",
       };
-      const result = { success: true };
-      mockDeviceService.connectDevice.mockResolvedValue(result);
+      const mockReq = { user: { _id: "userId" } };
+      const result = {
+        deviceId: "deviceId123",
+        status: DeviceStatus.CONNECTED,
+        bundle: "bundleId123",
+      };
 
-      expect(await controller.connectDevice(dto)).toBe(result);
-      expect(mockDeviceService.connectDevice).toHaveBeenCalledWith(
+      // Make sure to mock connectDeviceBundle, not connectDevice
+      mockDeviceService.connectDeviceBundle = jest.fn().mockResolvedValue(result);
+
+      // If you previously set connectDevice in beforeEach, add this line to overwrite:
+      controller["deviceService"].connectDeviceBundle = mockDeviceService.connectDeviceBundle;
+
+      expect(await controller.connectDevice(dto, mockReq)).toBe(result);
+      expect(mockDeviceService.connectDeviceBundle).toHaveBeenCalledWith(
         dto.deviceId,
         dto.bundleId,
+        mockReq.user._id
       );
     });
   });

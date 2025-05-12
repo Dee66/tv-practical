@@ -6,7 +6,7 @@
  */
 import { Body, Controller, Post, Res, Logger } from "@nestjs/common";
 import { Response as ExpressResponse } from "express";
-import { UserService } from "src/user/user.service";
+import { UserService } from "../user/user.service";
 import { OtpService } from "../otp/otp.service";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
