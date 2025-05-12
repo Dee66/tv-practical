@@ -5,6 +5,8 @@ import {
   Injectable,
   Logger,
   UnauthorizedException,
+  HttpException,
+  HttpStatus,
 } from "@nestjs/common";
 
 import { JwtService } from "@nestjs/jwt";
@@ -17,6 +19,7 @@ import { OtpService } from "../otp/otp.service";
 import { UserService } from "../user/user.service";
 import { RequestOtpDto } from "./dto/request-otp.dto";
 import { User, UserDocument } from "../user/user.schema";
+import { ErrorCodes, ErrorCodeMessages } from "../common/constants/error-codes";
 
 @Injectable()
 export class AuthService {
@@ -49,7 +52,10 @@ export class AuthService {
   async requestOtp(dto: RequestOtpDto) {
     const { cellNumber } = dto;
     if (!cellNumber) {
-      throw new BadRequestException("Cell number is required");
+      throw new BadRequestException({
+        errorCode: ErrorCodes.VALIDATION_ERROR,
+        message: "Cell number is required",
+      });
     }
     await this.otpModel.updateMany(
       { cell_number: cellNumber, status: OTPStatus.ACTIVE },
@@ -69,7 +75,14 @@ export class AuthService {
       this.webSocketGateway.emitOtpResponse(cellNumber, otp);
     } catch (error) {
       this.logger.error("Error creating OTP:", error);
-      throw new BadRequestException("Error creating OTP");
+      throw new HttpException(
+        {
+          errorCode: ErrorCodes.INTERNAL_ERROR,
+          message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
+          details: error?.message || error,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
     return {
       success: true,
@@ -82,7 +95,10 @@ export class AuthService {
       // 1. Lookup user
       const user = await this.userService.findOrCreateClient(cellNumber);
       if (!user) {
-        throw new UnauthorizedException("User not found");
+        throw new UnauthorizedException({
+          errorCode: ErrorCodes.USER_NOT_FOUND,
+          message: ErrorCodeMessages[ErrorCodes.USER_NOT_FOUND],
+        });
       }
 
       // 2. Generate token
@@ -107,7 +123,11 @@ export class AuthService {
       };
     } catch (err) {
       this.logger.error("Login error:", err);
-      throw new UnauthorizedException("Login failedddd");
+      throw new UnauthorizedException({
+        errorCode: ErrorCodes.UNAUTHORIZED,
+        message: ErrorCodeMessages[ErrorCodes.UNAUTHORIZED],
+        details: err?.message || err,
+      });
     }
   }
 }

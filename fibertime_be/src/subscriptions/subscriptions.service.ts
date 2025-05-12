@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
+import { ErrorCodes } from "../common/constants/error-codes";
 import {
   Subscription,
   SubscriptionDocument,
@@ -20,9 +21,16 @@ export class SubscriptionsService {
   }
 
   async findByUser(userId: string): Promise<Subscription[]> {
-    return this.subscriptionModel
+    const subs = await this.subscriptionModel
       .find({ user: new Types.ObjectId(userId) })
       .exec();
+    if (!subs || subs.length === 0) {
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: `No subscriptions found for user ${userId}`,
+      });
+    }
+    return subs;
   }
 
   async getUserActiveBalance(userId: string): Promise<number | null> {
@@ -30,6 +38,12 @@ export class SubscriptionsService {
       user: new Types.ObjectId(userId),
       status: SubscriptionStatus.ACTIVE,
     });
-    return activeSubscription ? activeSubscription.dataBalance : null;
+    if (!activeSubscription) {
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: `No active subscription found for user ${userId}`,
+      });
+    }
+    return activeSubscription.dataBalance;
   }
 }

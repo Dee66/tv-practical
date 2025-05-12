@@ -25,7 +25,7 @@ export async function requestOtp(cellNumber: string): Promise<{ otp?: string }> 
 export async function verifyOtpAndLogin(cellNumber: string, otp: string): Promise<LoginResponse> {
     try {
         return await api.post<LoginResponse>(
-            `/api/auth/login`, // not verify-otp as per spec
+            `/api/auth/login`,
             {cellNumber, otp}
         );
     } catch (err) {

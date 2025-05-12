@@ -6,7 +6,8 @@
     "dev": "npm i && next",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -28,6 +29,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.3.2",
     "typescript": "^5"
   }
 }

@@ -5,6 +5,8 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
@@ -16,6 +18,7 @@ import {
   SubscriptionStatus,
 } from "../subscriptions/subscriptions.schema";
 import { Bundle, BundleDocument } from "../bundle/bundle.schema";
+import { ErrorCodes, ErrorCodeMessages } from "../common/constants/error-codes";
 
 @Injectable()
 export class DeviceService {
@@ -38,10 +41,10 @@ export class DeviceService {
   async getDeviceByCode(deviceCode: string) {
     const device = await this.deviceModel.findOne({ pairingCode: deviceCode });
     if (!device) {
-      return {
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
         message: `No device found with the provided code ${deviceCode}`,
-        device: null,
-      };
+      });
     }
     return {
       deviceId: device._id as string,
@@ -66,7 +69,10 @@ export class DeviceService {
 
     const device = await this.deviceModel.findOne({ pairingCode: deviceCode });
     if (!device) {
-      throw new NotFoundException("Device not found");
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: ErrorCodeMessages[ErrorCodes.NOT_FOUND],
+      });
     }
     device.status = deviceStatus;
     await device.save();
@@ -148,7 +154,10 @@ export class DeviceService {
   private async linkBundleToUser(userId: string, bundleId: string) {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException("User not found, unable to link Bundle");
+      throw new NotFoundException({
+        errorCode: ErrorCodes.USER_NOT_FOUND,
+        message: ErrorCodeMessages[ErrorCodes.USER_NOT_FOUND],
+      });
     }
     // Set the bundle only if it's different
     if (!user.bundle || user.bundle.toString() !== bundleId) {
@@ -165,7 +174,10 @@ export class DeviceService {
   ) {
     const device = await this.deviceModel.findOne({ _id: deviceId });
     if (!device) {
-      throw new NotFoundException("Device not found, unable to link Bundle");
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: "Device not found, unable to link Bundle",
+      });
     }
     device.bundle = new Types.ObjectId(bundleId);
     device.status = DeviceStatus.CONNECTED;
@@ -182,7 +194,10 @@ export class DeviceService {
     // Fetch the bundle to get the data amount
     const bundle = await this.bundleModel.findById(bundleId);
     if (!bundle) {
-      throw new NotFoundException("Bundle not found");
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: "Bundle not found",
+      });
     }
 
     // Create new subscription
@@ -207,15 +222,24 @@ export class DeviceService {
   async pairDevice(pairingCode: string): Promise<Record<string, any>> {
     const device = await this.deviceModel.findOne({ pairingCode });
     if (!device) {
-      throw new NotFoundException("Pairing code not found");
+      throw new NotFoundException({
+        errorCode: ErrorCodes.NOT_FOUND,
+        message: "Pairing code not found",
+      });
     }
 
     if (device.status === DeviceStatus.CONNECTED) {
-      throw new BadRequestException("Device already paired");
+      throw new BadRequestException({
+        errorCode: ErrorCodes.VALIDATION_ERROR,
+        message: "Device already paired",
+      });
     }
 
     if (device.expires_at && new Date() > device.expires_at) {
-      throw new BadRequestException("Pairing code expired");
+      throw new BadRequestException({
+        errorCode: ErrorCodes.VALIDATION_ERROR,
+        message: "Pairing code expired",
+      });
     }
 
     // Update device status to PAIRED

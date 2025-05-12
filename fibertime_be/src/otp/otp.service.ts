@@ -1,9 +1,18 @@
-import { forwardRef, Inject, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { ErrorCodeMessages, ErrorCodes } from "../common/constants/error-codes";
 import { User, UserDocument } from "../user/user.schema";
-import { OTP, OTPDocument, OTPStatus } from "./otp.schema";
 import { WebSocketGatewayService } from "../websocket/websocket.gateway";
+import { OTP, OTPDocument, OTPStatus } from "./otp.schema";
 
 @Injectable()
 export class OtpService {
@@ -18,18 +27,24 @@ export class OtpService {
 
   /**
    * Validates an OTP for a phone number.
-   * Returns the OTP document if valid and active, or null otherwise.
+   * Returns the OTP document if valid and active, or throws if not.
    */
-  async validateOtp(
-    cellNumber: string,
-    otp: string,
-  ): Promise<OTPDocument | null> {
-    return this.otpModel.findOne({
+  async validateOtp(cellNumber: string, otp: string): Promise<OTPDocument> {
+    const otpDoc = await this.otpModel.findOne({
       cell_number: cellNumber,
       otp,
       status: OTPStatus.ACTIVE,
       expires_at: { $gt: new Date() },
     });
+
+    if (!otpDoc) {
+      throw new BadRequestException({
+        errorCode: ErrorCodes.OTP_INVALID,
+        message: ErrorCodeMessages[ErrorCodes.OTP_INVALID],
+      });
+    }
+
+    return otpDoc;
   }
 
   /**
@@ -42,10 +57,27 @@ export class OtpService {
 
   // Verify cell number, create user if does not exist
   async verifyCellNumber(cellNumber: string) {
-    const user = await this.userModel.findOne({ cell_number: cellNumber });
-    // If a user does not exist, create
+    if (!cellNumber) {
+      throw new BadRequestException({
+        errorCode: ErrorCodes.VALIDATION_ERROR,
+        message: "Cell number is required.",
+      });
+    }
+    let user = await this.userModel.findOne({ cell_number: cellNumber });
     if (!user) {
-      await this.userModel.create({ cell_number: cellNumber });
+      try {
+        user = await this.userModel.create({ cell_number: cellNumber });
+      } catch (error) {
+        this.logger.error("Error creating user:", error);
+        throw new HttpException(
+          {
+            errorCode: ErrorCodes.INTERNAL_ERROR,
+            message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
+            details: error?.message || error,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
 
     return { success: true };
@@ -57,25 +89,45 @@ export class OtpService {
 
   // Generate and store/send the OTP
   async generateOtp(cellNumber: string) {
+    if (!cellNumber) {
+      throw new BadRequestException({
+        errorCode: ErrorCodes.VALIDATION_ERROR,
+        message: "Cell number is required.",
+      });
+    }
     const otp = this.createOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Expire any previous active OTPs for this number
-    await this.otpModel.updateOne(
-      { cell_number: cellNumber, status: OTPStatus.ACTIVE },
-      { $set: { status: OTPStatus.EXPIRED } },
-    );
+    try {
+      // Expire any previous active OTPs for this number
+      await this.otpModel.updateOne(
+        { cell_number: cellNumber, status: OTPStatus.ACTIVE },
+        { $set: { status: OTPStatus.EXPIRED } },
+      );
 
-    await this.otpModel.create({
-      cell_number: cellNumber,
-      status: OTPStatus.ACTIVE,
-      expires_at: expiresAt,
-    });
+      await this.otpModel.create({
+        cell_number: cellNumber,
+        otp,
+        status: OTPStatus.ACTIVE,
+        expires_at: expiresAt,
+      });
 
-    this.webSocketGateway.emitOtpResponse(cellNumber, otp);
+      this.webSocketGateway.emitOtpResponse(cellNumber, otp);
+    } catch (error) {
+      this.logger.error("Error generating OTP:", error);
+      throw new HttpException(
+        {
+          errorCode: ErrorCodes.INTERNAL_ERROR,
+          message: ErrorCodeMessages[ErrorCodes.INTERNAL_ERROR],
+          details: error?.message || error,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     return {
       success: true,
+      otp,
     };
   }
 
