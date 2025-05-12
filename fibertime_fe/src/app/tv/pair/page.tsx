@@ -9,13 +9,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppException } from '../../../lib/AppException';
 import PairingSimulator from '../../components/PairingSimulator';
 import TVSimulator from '../../components/TVSimulator';
+import { useProtectedRoute } from '../../config/useProtectedRoute';
 import { useSimulator } from '../../context/simulatorContext';
 import { createPairingCode } from '../../services/pairingService';
-import { useProtectedRoute } from '../../config/useProtectedRoute';
 
 export default function PairTVPage() {
     useProtectedRoute();
-    
+
     const [macAddress, setMacAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [device, setDevice] = useState<{

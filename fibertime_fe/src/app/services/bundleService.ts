@@ -13,8 +13,6 @@ export interface BundlesResponse {
     dataBalance?: number | null;
 }
 
-// todo DP --> url feels dodge
-// improve
 export async function fetchUserBundle(): Promise<BundlesResponse> {
     const res = await api.authGet<{ bundle: Bundle | null; dataBalance?: number | null }>('/api/user/user-bundle');
     return {

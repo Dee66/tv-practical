@@ -42,11 +42,8 @@ export class OtpService {
 
   // Verify cell number, create user if does not exist
   async verifyCellNumber(cellNumber: string) {
-    // Find user
     const user = await this.userModel.findOne({ cell_number: cellNumber });
-
     // If a user does not exist, create
-    // todo DP --> spec is unclear, create if not exist?
     if (!user) {
       await this.userModel.create({ cell_number: cellNumber });
     }

@@ -19,17 +19,15 @@ This project is a back-end system that enables users to connect their TV to fibe
 
 
 Start the application using Docker Compose:
-
-
+</hr>
 docker compose up
+</hr>
 Access the application:
-
-
+</hr>
 Frontend: http://localhost/
-Backend: http://localhost/api/
+</hr>
 Stop the application:
-
-
+</hr>
 docker compose down
 <hr></hr>
 API Usage

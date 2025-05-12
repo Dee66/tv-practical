@@ -61,19 +61,6 @@ export class DeviceController {
   }
 
   /**
-   * GET /device/connection-status/:deviceCode
-   *
-   * Endpoint to retrieve the connection status of a device.
-   *
-   * @param deviceId - The unique code of the device.
-   * @returns The connection status of the specified device.
-   */
-  @Get("connection-status/:deviceId")
-  async connectionStatus(@Param("deviceId") deviceId: string) {
-    return this.deviceService.getConnectionStatus(deviceId);
-  }
-
-  /**
    * POST /device/create-device-code
    *
    * Endpoint to generate a pairing code for a TV device.

@@ -34,21 +34,6 @@ export class DeviceService {
     private readonly webSocketGateway: WebSocketGatewayService,
   ) {}
 
-  async getConnectionStatus(deviceId: string) {
-    // todo DP --> bit of a problem as connection-status GET, according to the spec, has to use deviceId for lookup
-    // currently the device schema does not support ID.
-    // investigare
-    const device = await this.deviceModel.findOne({ pairingCode: deviceId });
-    if (!device) {
-      throw new NotFoundException("Device not found");
-    }
-    return {
-      deviceId: device._id as string,
-      status: device.status,
-      isConnected: device.status === DeviceStatus.CONNECTED,
-    };
-  }
-
   // GET /api/device/device?device-code=XXXX
   async getDeviceByCode(deviceCode: string) {
     const device = await this.deviceModel.findOne({ pairingCode: deviceCode });
@@ -72,32 +57,6 @@ export class DeviceService {
       .findOne({ owner: userId, status: "ACTIVE" })
       .exec();
     return device || null;
-  }
-
-  // todo DP --> too much going on here
-  // improve
-  async getOrCreateDevice(userId: string): Promise<Device> {
-    let device = await this.deviceModel
-      .findOne({ owner: userId, status: "ACTIVE" })
-      .exec();
-
-    if (!device) {
-      device = await this.deviceModel.create({
-        owner: userId,
-        status: DeviceStatus.ACTIVE,
-        mac_address: "auto-generated-or-placeholder", // todo DP --> FIX!!
-        pairingCode: this.generatePairingCode(),
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-      });
-
-      // Link device to the user
-      await this.userModel.updateOne(
-        { _id: userId },
-        { $addToSet: { devices: device._id } },
-      );
-    }
-
-    return device;
   }
 
   async setConnectionStatus(deviceCode: string, deviceStatus: DeviceStatus) {

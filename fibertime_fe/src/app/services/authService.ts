@@ -32,12 +32,3 @@ export async function verifyOtpAndLogin(cellNumber: string, otp: string): Promis
         throw AppException.from(err);
     }
 }
-
-// todo DP --> unused
-export async function getConnectionStatus(deviceCode: string): Promise<{ isConnected: boolean }> {
-    try {
-        return await api.get<{ isConnected: boolean }>(`/api/device/connection-status/${deviceCode}`);
-    } catch (err) {
-        throw AppException.from(err);
-    }
-}

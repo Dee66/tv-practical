@@ -36,8 +36,6 @@ export class AuthController {
   ) {
     const user = await this.userService.findOrCreateClient(cellNumber);
     if (!user) {
-      // todo dp -> confirm http code for shit went wrong
-      // maybe change exception handling to enum? investigate
       res.status(502).json({
         success: false,
         message: "Something has gone horribly wrong, please try again",

@@ -77,8 +77,6 @@ export class AuthService {
     };
   }
 
-  // todo DP --> too much going on here, S of SOLID
-  // improve
   async login(cellNumber: string) {
     try {
       // 1. Lookup user
