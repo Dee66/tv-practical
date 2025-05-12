@@ -5,12 +5,12 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AppException } from "../../lib/AppException";
 import { webSocketService } from "../../lib/WebSocketService";
-import { useSimulator } from "../context/simulatorContext";
 import { useAuth } from "../context/authContext";
+import { useSimulator } from "../context/simulatorContext";
 import { verifyOtpAndLogin } from "../services/authService";
 import SimulatorContainer from "./SimulatorContainer";
 
@@ -22,14 +22,21 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
     const [otp, setOtp] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+    const [otpDelayDone, setOtpDelayDone] = useState(false);
+    const pendingOtpRef = useRef<string | null>(null);
     const { closeOtpSimulator } = useSimulator();
     const { login } = useAuth();
     const router = useRouter();
-    const [mounted, setMounted] = useState(false);
 
     const handleOtpResponse = (data: { cellNumber: string; otp: string }) => {
         if (data.cellNumber === cellNumber) {
-            setOtp(data.otp);
+            // Store OTP, but only show after delay
+            if (!otpDelayDone) {
+                pendingOtpRef.current = data.otp;
+            } else {
+                setOtp(data.otp);
+            }
         }
     };
 
@@ -52,9 +59,22 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
     useEffect(() => {
         setMounted(true);
         subscribeToOtpEvents();
+
+        // Start artificial delay when component mounts
+        setOtpDelayDone(false);
+        pendingOtpRef.current = null;
+        const timer = setTimeout(() => {
+            setOtpDelayDone(true);
+            // If OTP already received, show it now
+            if (pendingOtpRef.current) {
+                setOtp(pendingOtpRef.current);
+            }
+        }, 2200);
+
         return () => {
             unsubscribeFromOtpEvents();
             setMounted(false);
+            clearTimeout(timer);
         };
     }, [cellNumber]);
 
@@ -69,7 +89,7 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
             }
 
             login(res.accessToken);
-            router.push(`/tv/pair`)
+            router.push(`/tv/pair`);
             closeOtpSimulator();
         } catch (err) {
             const appErr = AppException.from(err);

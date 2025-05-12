@@ -28,6 +28,9 @@ export async function fetchAllBundles(): Promise<BundlesResponse> {
 }
 
 export async function connectDevice(deviceId: string, bundleId: string) {
+
+    debugger
+
     return api.authPost('/api/device/connect-device', {
         deviceId,
         bundleId,

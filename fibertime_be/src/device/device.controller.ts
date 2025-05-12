@@ -15,7 +15,14 @@ import {
   UseGuards,
   Req,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiParam,
+  ApiBearerAuth,
+} from "@nestjs/swagger";
 import { DeviceStatus } from "./device.schema";
 import { DeviceService } from "./device.service";
 import { ConnectDeviceDto } from "./dto/connect-device.dto";
@@ -27,31 +34,29 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 export class DeviceController {
   private readonly logger = new Logger(DeviceController.name);
 
-  constructor(private readonly deviceService: DeviceService) { }
+  constructor(private readonly deviceService: DeviceService) {}
 
-  /**
-   * GET /device/:deviceCode
-   *
-   * Endpoint to retrieve details of a device by its code.
-   *
-   * @param deviceCode - The unique code of the device.
-   * @returns The details of the specified device.
-   */
-
+  @ApiOperation({ summary: "Retrieve details of a device by its code" })
+  @ApiParam({
+    name: "deviceCode",
+    description: "The unique code of the device",
+  })
+  @ApiResponse({ status: 200, description: "Device details returned" })
   @Get("device/:deviceCode")
   async getDeviceCode(@Param("deviceCode") deviceCode: string) {
     return this.deviceService.getDeviceByCode(deviceCode);
   }
 
-  /**
-   * PUT /device/connection-status
-   *
-   * Endpoint to update the connection status of a device.
-   *
-   * @param deviceCode - The unique code of the device.
-   * @param status - The new connection status of the device.
-   * @returns The updated connection status of the device.
-   */
+  @ApiOperation({ summary: "Update the connection status of a device" })
+  @ApiBody({
+    schema: {
+      example: {
+        deviceCode: "ABCD",
+        status: "connected",
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: "Connection status updated" })
   @Put("connection-status")
   async setConnectionStatus(
     @Body("deviceCode") deviceCode: string,
@@ -60,14 +65,15 @@ export class DeviceController {
     return this.deviceService.setConnectionStatus(deviceCode, status);
   }
 
-  /**
-   * POST /device/create-device-code
-   *
-   * Endpoint to generate a pairing code for a TV device.
-   *
-   * @param createDeviceCodeDto - The data transfer object containing the MAC address of the device.
-   * @returns The generated pairing code.
-   */
+  @ApiOperation({ summary: "Generate a pairing code for a TV device" })
+  @ApiBody({
+    schema: {
+      example: {
+        mac_address: "AA:BB:CC:DD:EE:01",
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: "Pairing code generated" })
   @Post("create-device-code")
   async generatePairingCode(@Body() createDeviceCodeDto: CreatePairingCodeDto) {
     return this.deviceService.createPairingCode(
@@ -75,31 +81,34 @@ export class DeviceController {
     );
   }
 
-  /**
-   * POST /device/connect-tv
-   * Endpoint to connect a TV device using a pairing code.
-   *
-   * @param pairingCode - The pairing code of the TV device.
-   * @returns The result of the connection process.
-   */
+  @ApiOperation({ summary: "Connect a TV device using a pairing code" })
+  @ApiBody({
+    schema: {
+      example: {
+        pairingCode: "ABCD",
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: "TV device connected" })
   @Post("connect-tv")
   async connectTv(@Body("pairingCode") pairingCode: string) {
     return await this.deviceService.pairDevice(pairingCode);
   }
 
-  /**
-   * POST /device/connect-device
-   *
-   * Endpoint to connect a device to a bundle.
-   *
-   * @param connectDeviceDto - The data transfer object containing the device ID and bundle ID.
-   * @returns The result of the connection process.
-   */
-
-  @Post("connect-device")
+  @ApiOperation({ summary: "Connect a device to a bundle" })
+  @ApiBearerAuth()
+  @ApiBody({
+    schema: {
+      example: {
+        deviceId: "deviceObjectId",
+        bundleId: "bundleObjectId",
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: "Device connected to bundle" })
   @UseGuards(JwtAuthGuard)
+  @Post("connect-device")
   async connectDevice(@Body() connectDeviceDto: ConnectDeviceDto, @Req() req) {
-    // req.user._id comes from your JwtStrategy
     return this.deviceService.connectDeviceBundle(
       connectDeviceDto.deviceId,
       connectDeviceDto.bundleId,

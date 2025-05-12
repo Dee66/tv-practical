@@ -2,7 +2,8 @@ import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import React, { useEffect, useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import SimulatorContainer from "./SimulatorContainer";
 import { useSimulator } from "../context/simulatorContext";
@@ -15,35 +16,49 @@ const PairingSimulator: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [delayDone, setDelayDone] = useState(false);
+    const pairedDataRef = useRef<{ deviceId: string } | null>(null);
     const { closePairingSimulator } = useSimulator();
     const router = useRouter();
 
-    // todo DP --> clean this up
     useEffect(() => {
         setMounted(true);
-
-        const handlePaired = (data: { deviceId: string }) => {
-            setLoading(false);
-            closePairingSimulator();
-            if (data?.deviceId) {
-                router.push(`/bundles?deviceId=${data.deviceId}`);
-            } else {
-                router.push("/bundles");
-            }
-        };
-
-        const subscribeToPairingEvents = async () => {
-            await webSocketService.connect();
-            webSocketService.on("paired", handlePaired);
-        };
-
         subscribeToPairingEvents();
 
         return () => {
-            webSocketService.off("paired");
+            cleanupPairingEvents();
             setMounted(false);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [closePairingSimulator, router]);
+
+    const handlePaired = (data: { deviceId: string }) => {
+        if (!delayDone) {
+            // Save the event for later
+            pairedDataRef.current = data;
+            return;
+        }
+        finishPairing(data);
+    };
+
+    const finishPairing = (data: { deviceId: string }) => {
+        setLoading(false);
+        closePairingSimulator();
+        if (data?.deviceId) {
+            router.push(`/bundles?deviceId=${data.deviceId}`);
+        } else {
+            router.push("/bundles");
+        }
+    };
+
+    const subscribeToPairingEvents = async () => {
+        await webSocketService.connect();
+        webSocketService.on("paired", handlePaired);
+    };
+
+    const cleanupPairingEvents = () => {
+        webSocketService.off("paired");
+    };
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const input = event.target.value.toUpperCase().slice(0, 4);
@@ -53,7 +68,6 @@ const PairingSimulator: React.FC = () => {
     const handlePairingSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setLoading(true);
 
         if (!pairingCode || pairingCode.trim() === "") {
             setError("Pairing code is required");
@@ -61,9 +75,20 @@ const PairingSimulator: React.FC = () => {
             return;
         }
 
+        setLoading(true);
+        setDelayDone(false);
+        pairedDataRef.current = null;
+
         try {
             await validatePairingCode(pairingCode);
-            // Wait for "paired" event from server
+            setTimeout(() => {
+                setDelayDone(true);
+                // If paired event already happened, finish now
+                if (pairedDataRef.current) {
+                    finishPairing(pairedDataRef.current);
+                }
+            }, 3000);
+            // Now wait for the "paired" event from the server as normal
         } catch (err) {
             setError("Failed to pair devices. Please try again.");
             setLoading(false);
@@ -107,7 +132,7 @@ const PairingSimulator: React.FC = () => {
                             color="primary"
                             disabled={loading}
                         >
-                            {loading ? "Connecting..." : "Pair Devices"}
+                            {loading ? <CircularProgress size={24} color="inherit" /> : "Pair Devices"}
                         </Button>
                     </form>
                     {error && (

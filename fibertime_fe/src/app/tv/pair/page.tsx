@@ -82,7 +82,7 @@ export default function PairTVPage() {
                             {error}
                         </Alert>
                     )}
-                    <form onSubmit={handleCreatePairingCode} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', marginTop: 16 }}>
+                    <form onSubmit={handleCreatePairingCode} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', marginTop: 16, marginBottom: 16 }}>
                         <TextField
                             label="TV MAC Address"
                             variant="outlined"
