@@ -13,10 +13,13 @@ import { useProtectedRoute } from '../../config/useProtectedRoute';
 import { useSimulator } from '../../context/simulatorContext';
 import { createPairingCode } from '../../services/pairingService';
 
+const MAC_REGEX = /^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$/;
+
 export default function PairTVPage() {
     useProtectedRoute();
 
     const [macAddress, setMacAddress] = useState('');
+    const [macError, setMacError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [device, setDevice] = useState<{
         deviceId: string;
@@ -67,6 +70,20 @@ export default function PairTVPage() {
         }
     };
 
+    // Validate MAC address on change
+    const handleMacChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.toUpperCase();
+        setMacAddress(value);
+
+        if (value.length === 0) {
+            setMacError(null);
+        } else if (!MAC_REGEX.test(value)) {
+            setMacError('Invalid MAC address. Format: AA:BB:CC:DD:EE:FF');
+        } else {
+            setMacError(null);
+        }
+    };
+
     return (
         <main className="centered-content">
             <div className="tv-pair-center">
@@ -75,7 +92,7 @@ export default function PairTVPage() {
                         Pair a new TV
                     </Typography>
                     <Typography variant="subtitle1" className="hero-subtitle" align="center" gutterBottom>
-                        Enter your TV's MAC address to generate a pairing code.
+                        Enter your TV&apos;s MAC address to generate a pairing code.
                     </Typography>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
@@ -87,9 +104,10 @@ export default function PairTVPage() {
                             label="TV MAC Address"
                             variant="outlined"
                             value={macAddress}
-                            onChange={(e) => setMacAddress(e.target.value.toUpperCase())}
+                            onChange={handleMacChange}
                             disabled={loading}
                             required
+                            error={!!macError}
                             margin="normal"
                             slotProps={{
                                 input: {
@@ -100,18 +118,19 @@ export default function PairTVPage() {
                                         letterSpacing: 2,
                                         fontVariant: 'tabular-nums',
                                         fontSize: 18,
-                                    }
+                                    },
+                                    maxLength: 17, // 12 hex + 5 separators
                                 }
                             }}
                             className="mac-input"
                             placeholder="AA:BB:CC:DD:EE:FF"
-                            helperText="Format: AA:BB:CC:DD:EE:FF"
+                            helperText={macError || "Format: AA:BB:CC:DD:EE:FF"}
                         />
                         <Button
                             type="submit"
                             variant="contained"
                             color="primary"
-                            disabled={loading || !macAddress.trim()}
+                            disabled={loading || !macAddress.trim() || !!macError}
                             className="mac-submit-btn"
                         >
                             {loading ? 'Generating...' : 'Generate Pairing Code'}
@@ -131,7 +150,7 @@ export default function PairTVPage() {
                                 <b>Status:</b> {device.status}
                             </Typography>
                             <Typography align="center" gutterBottom color="text.secondary">
-                                Enter the code shown on your TV into your mobile device to complete pairing.
+                                Enter the code shown on your TV into your cellphone to complete pairing.
                             </Typography>
                         </Paper>
                     )}

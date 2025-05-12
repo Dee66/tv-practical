@@ -134,12 +134,17 @@ const PairingSimulator: React.FC = () => {
                         >
                             {loading ? <CircularProgress size={24} color="inherit" /> : "Pair Devices"}
                         </Button>
+                        {error && (
+                            <Typography
+                                color="error"
+                                align="center"
+                                className="cellphone-error"
+                                sx={{ mt: 2 }}
+                            >
+                                {error}
+                            </Typography>
+                        )}
                     </form>
-                    {error && (
-                        <Typography color="error" align="center" className="cellphone-error">
-                            {error}
-                        </Typography>
-                    )}
                 </div>
                 <div className="cellphone-footer">
                     <div className="cellphone-home-indicator" />
