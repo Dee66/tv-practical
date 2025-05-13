@@ -7,6 +7,4 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
-
-ENTRYPOINT sh -c "node dist/seed.js && node dist/main.js"
+ENTRYPOINT sh -c "npm run build && node dist/seed.js && node dist/main.js"

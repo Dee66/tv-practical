@@ -101,17 +101,14 @@ describe("DeviceController", () => {
         bundle: "bundleId123",
       };
 
-      // Make sure to mock connectDeviceBundle, not connectDevice
       mockDeviceService.connectDeviceBundle = jest.fn().mockResolvedValue(result);
-
-      // If you previously set connectDevice in beforeEach, add this line to overwrite:
       controller["deviceService"].connectDeviceBundle = mockDeviceService.connectDeviceBundle;
 
       expect(await controller.connectDevice(dto, mockReq)).toBe(result);
       expect(mockDeviceService.connectDeviceBundle).toHaveBeenCalledWith(
         dto.deviceId,
         dto.bundleId,
-        mockReq.user._id
+        mockReq.user._id,
       );
     });
   });

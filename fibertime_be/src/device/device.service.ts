@@ -230,4 +230,33 @@ export class DeviceService {
 
     return new DeviceResponseDto(device);
   }
+
+  async linkDevice(
+    pairingCode: string,
+    userId: string,
+  ): Promise<DeviceResponseDto> {
+    const device = await this.deviceModel.findOne({ pairingCode });
+    if (!device) {
+      throwAppException(ErrorCodes.NOT_FOUND, "Pairing code not found");
+    }
+
+    // Add the device to the user's devices array if not already present
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throwAppException(ErrorCodes.USER_NOT_FOUND, "User not found");
+    }
+    if (!user.devices.some((d) => d.toString() === device._id.toString())) {
+      user.devices.push(device._id);
+      await user.save();
+    }
+
+    // Optionally update device status
+    device.status = DeviceStatus.CONNECTED;
+    await device.save();
+
+    // Optionally emit a WebSocket event
+    this.webSocketGateway.emitDevicePaired(device._id);
+
+    return new DeviceResponseDto(device);
+  }
 }

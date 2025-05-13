@@ -55,9 +55,12 @@ export default function PairTVPage() {
 
         try {
             const data = await createPairingCode(macAddress);
+
+            debugger
+
             setDevice({
                 deviceId: data.deviceId,
-                expiresAt: data.expiresAt,
+                expiresAt: data.expiresAt || data.expires_at,
                 status: data.status,
                 pairingCode: data.pairingCode,
             });

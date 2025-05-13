@@ -1,10 +1,10 @@
 # tv-practical
 
 ## Objective
-This project implements the back-end services required for a customer to connect their TV to fibertime™ using a mobile device. It provides secure, scalable APIs for:
+This project implements the back-end services required for a customer to connect their TV to fibertime™ using a cellphone. It provides secure, scalable APIs for:
 - Generating and validating TV pairing codes.
 - User authentication via phone number and OTP.
-- Managing the connection between TV and mobile device.
+- Managing the connection between TV and cellphone.
 - Retrieving and displaying user bundle information.
 
 ## Features

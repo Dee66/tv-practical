@@ -16,8 +16,6 @@ export class OtpService {
     private readonly webSocketGateway: WebSocketGatewayService,
   ) {}
 
-  private readonly logger = new Logger(OtpService.name);
-
   /**
    * Validates an OTP for a phone number.
    * Returns the OTP document if valid and active, or throws if not.
@@ -48,19 +46,17 @@ export class OtpService {
   // Verify cell number, create user if does not exist
   async verifyCellNumber(cellNumber: string) {
     if (!cellNumber) {
-      throwAppException(ErrorCodes.VALIDATION_ERROR, "Cell number is required.");
+      throwAppException(
+        ErrorCodes.VALIDATION_ERROR,
+        "Cell number is required.",
+      );
     }
     let user = await this.userModel.findOne({ cell_number: cellNumber });
     if (!user) {
       try {
         user = await this.userModel.create({ cell_number: cellNumber });
       } catch (error) {
-        this.logger.error("Error creating user:", error);
-        throwTypedException("custom", {
-          errorCode: ErrorCodes.INTERNAL_ERROR,
-          details: error?.message || error,
-          status: 500,
-        });
+        throwAppException(ErrorCodes.INTERNAL_ERROR, error?.message || error);
       }
     }
 
@@ -74,10 +70,10 @@ export class OtpService {
   // Generate and store/send the OTP
   async generateOtp(cellNumber: string) {
     if (!cellNumber) {
-      throwTypedException("badrequest", {
-        errorCode: ErrorCodes.VALIDATION_ERROR,
-        details: "Cell number is required.",
-      });
+      throwAppException(
+        ErrorCodes.VALIDATION_ERROR,
+        "Cell number is required.",
+      );
     }
     const otp = this.createOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -98,12 +94,7 @@ export class OtpService {
 
       this.webSocketGateway.emitOtpResponse(cellNumber, otp);
     } catch (error) {
-      this.logger.error("Error generating OTP:", error);
-      throwTypedException("custom", {
-        errorCode: ErrorCodes.INTERNAL_ERROR,
-        details: error?.message || error,
-        status: 500,
-      });
+      throwAppException(ErrorCodes.INTERNAL_ERROR, error?.message || error);
     }
 
     return {

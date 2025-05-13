@@ -82,6 +82,7 @@ export class DeviceController {
   }
 
   @ApiOperation({ summary: "Connect a TV device using a pairing code" })
+  @ApiBearerAuth()
   @ApiBody({
     schema: {
       example: {
@@ -90,9 +91,10 @@ export class DeviceController {
     },
   })
   @ApiResponse({ status: 200, description: "TV device connected" })
+  @UseGuards(JwtAuthGuard)
   @Post("connect-tv")
-  async connectTv(@Body("pairingCode") pairingCode: string) {
-    return await this.deviceService.pairDevice(pairingCode);
+  async connectTv(@Body("pairingCode") pairingCode: string, @Req() req) {
+    return await this.deviceService.linkDevice(pairingCode, req.user._id);
   }
 
   @ApiOperation({ summary: "Connect a device to a bundle" })

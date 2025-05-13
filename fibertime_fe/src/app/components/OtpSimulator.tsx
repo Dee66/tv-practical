@@ -6,13 +6,13 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
 import { AppException } from "../../lib/AppException";
 import { webSocketService } from "../../lib/WebSocketService";
 import { useAuth } from "../context/authContext";
 import { useSimulator } from "../context/simulatorContext";
 import { verifyOtpAndLogin } from "../services/authService";
 import SimulatorContainer from "./SimulatorContainer";
+import { withSimulatorPortal } from "./withSimulatorPortal";
 
 interface OtpSimulatorProps {
     cellNumber: string;
@@ -22,7 +22,6 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
     const [otp, setOtp] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [mounted, setMounted] = useState(false);
     const [otpDelayDone, setOtpDelayDone] = useState(false);
     const pendingOtpRef = useRef<string | null>(null);
     const { closeOtpSimulator } = useSimulator();
@@ -31,7 +30,6 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
 
     const handleOtpResponse = (data: { cellNumber: string; otp: string }) => {
         if (data.cellNumber === cellNumber) {
-            // Store OTP, but only show after delay
             if (!otpDelayDone) {
                 pendingOtpRef.current = data.otp;
             } else {
@@ -57,15 +55,11 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
     };
 
     useEffect(() => {
-        setMounted(true);
         subscribeToOtpEvents();
-
-        // Start artificial delay when component mounts
         setOtpDelayDone(false);
         pendingOtpRef.current = null;
         const timer = setTimeout(() => {
             setOtpDelayDone(true);
-            // If OTP already received, show it now
             if (pendingOtpRef.current) {
                 setOtp(pendingOtpRef.current);
             }
@@ -73,7 +67,6 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
 
         return () => {
             unsubscribeFromOtpEvents();
-            setMounted(false);
             clearTimeout(timer);
         };
     }, [cellNumber]);
@@ -99,11 +92,7 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
         }
     };
 
-    // Only render portal on client after mount
-    if (typeof window === "undefined" || !mounted) return null;
-
-    // Use portal to float the simulator, but keep all existing structure/styles
-    return createPortal(
+    return (
         <SimulatorContainer
             deviceType="cellphone"
             title="Simulator"
@@ -146,9 +135,8 @@ const OtpSimulator: React.FC<OtpSimulatorProps> = ({ cellNumber }) => {
                     <div className="cellphone-home-indicator"></div>
                 </div>
             </div>
-        </SimulatorContainer>,
-        document.getElementById("simulator-root")!
+        </SimulatorContainer>
     );
 };
 
-export default OtpSimulator;
+export default withSimulatorPortal(OtpSimulator);

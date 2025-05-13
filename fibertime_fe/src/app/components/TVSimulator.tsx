@@ -1,14 +1,12 @@
 import React from "react";
-import { createPortal } from "react-dom";
 import { useSimulator } from "../context/simulatorContext";
 import SimulatorContainer from "./SimulatorContainer";
+import { withSimulatorPortal } from "./withSimulatorPortal";
 
 const TVSimulator: React.FC = () => {
     const { tvPairingCode } = useSimulator();
 
-    if (typeof window === "undefined") return null;
-
-    return createPortal(
+    return (
         <SimulatorContainer
             deviceType="tv"
             title="TV Simulator"
@@ -27,9 +25,8 @@ const TVSimulator: React.FC = () => {
                     <span className="tv-footer-text">Awaiting connection...</span>
                 </div>
             </div>
-        </SimulatorContainer>,
-        document.getElementById("simulator-root")!
+        </SimulatorContainer>
     );
 };
 
-export default TVSimulator;
+export default withSimulatorPortal(TVSimulator);

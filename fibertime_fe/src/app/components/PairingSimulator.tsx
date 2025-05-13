@@ -7,34 +7,29 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import SimulatorContainer from "./SimulatorContainer";
 import { useSimulator } from "../context/simulatorContext";
-import { createPortal } from "react-dom";
 import { webSocketService } from "../../lib/WebSocketService";
 import { validatePairingCode } from "../services/pairingService";
+import { withSimulatorPortal } from "./withSimulatorPortal";
 
 const PairingSimulator: React.FC = () => {
     const [pairingCode, setPairingCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [mounted, setMounted] = useState(false);
     const [delayDone, setDelayDone] = useState(false);
     const pairedDataRef = useRef<{ deviceId: string } | null>(null);
     const { closePairingSimulator } = useSimulator();
     const router = useRouter();
 
     useEffect(() => {
-        setMounted(true);
         subscribeToPairingEvents();
-
         return () => {
             cleanupPairingEvents();
-            setMounted(false);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [closePairingSimulator, router]);
 
     const handlePaired = (data: { deviceId: string }) => {
         if (!delayDone) {
-            // Save the event for later
             pairedDataRef.current = data;
             return;
         }
@@ -83,21 +78,17 @@ const PairingSimulator: React.FC = () => {
             await validatePairingCode(pairingCode);
             setTimeout(() => {
                 setDelayDone(true);
-                // If paired event already happened, finish now
                 if (pairedDataRef.current) {
                     finishPairing(pairedDataRef.current);
                 }
             }, 3000);
-            // Now wait for the "paired" event from the server as normal
         } catch (err) {
             setError("Failed to pair devices. Please try again.");
             setLoading(false);
         }
     };
 
-    if (typeof window === "undefined" || !mounted) return null;
-
-    return createPortal(
+    return (
         <SimulatorContainer
             deviceType="cellphone"
             title="Cellphone Simulator"
@@ -150,9 +141,8 @@ const PairingSimulator: React.FC = () => {
                     <div className="cellphone-home-indicator" />
                 </div>
             </div>
-        </SimulatorContainer>,
-        document.getElementById("simulator-root")!
+        </SimulatorContainer>
     );
 };
 
-export default PairingSimulator;
+export default withSimulatorPortal(PairingSimulator);

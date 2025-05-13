@@ -5,7 +5,7 @@ export class DeviceResponseDto {
   mac_address: string;
   pairingCode: string;
   status: string;
-  expires_at?: Date;
+  expiresAt?: Date;
   bundle?: string | null;
   owner?: string | null;
   createdAt?: Date;
@@ -24,7 +24,7 @@ export class DeviceResponseDto {
     this.mac_address = device.mac_address ?? '';
     this.pairingCode = device.pairingCode ?? '';
     this.status = device.status ?? '';
-    this.expires_at = device.expires_at;
+    this.expiresAt = device.expires_at;
     this.bundle = device.bundle
       ? typeof device.bundle === 'object' && device.bundle._id
         ? device.bundle._id.toString()
